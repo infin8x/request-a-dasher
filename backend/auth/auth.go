@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/base64"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -28,11 +27,7 @@ func GetJWT() (string, error) {
 		signingSecret: "xbEg06vXu2zSQQEKRCufcRPKkv7wJOTvihSgaj9G_cc",
 	}
 
-	t := jwt.New(jwt.SigningMethodHS256)
-
-	t.Header["dd-ver"] = "DD-JWT-V1"
-
-	t.Claims = &DoorDashClaims{
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, &DoorDashClaims{
 		&jwt.StandardClaims{
 
 			Issuer:    accessKey.developerId,
@@ -41,15 +36,17 @@ func GetJWT() (string, error) {
 			IssuedAt:  time.Now().Unix(),
 		},
 		accessKey.keyId,
-	}
+	})
+	t.Header["dd-ver"] = "DD-JWT-V1"
 
-	decodedString, err := base64.URLEncoding.DecodeString(accessKey.signingSecret)
+	// decodedString, err := base64.URLEncoding.DecodeString(accessKey.signingSecret)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	ss, err := t.SignedString(decodedString)
-
+	ss, err := t.SignedString(accessKey.signingSecret)
 	if err != nil {
 		return "", err
-	} else {
-		return ss, nil
 	}
+	return ss, nil
 }
