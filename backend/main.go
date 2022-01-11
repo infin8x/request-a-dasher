@@ -20,14 +20,28 @@ type DoorDashClaims struct {
 	keyId string
 }
 
-func main() {
-	// TODO delete this nonsense, eventually
-	http.HandleFunc("/whoami", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "I am Deliverate! Like Deliberate but with Delivery :troll_face:")
-	})
+func whoamiHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/whoami" {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
 
+	if r.Method != "GET" {
+		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)
+		return
+	}
+
+	fmt.Fprint(w, "I am Deliverate! Like Deliberate but with Delivery :troll_face:")
+}
+
+func main() {
 	fmt.Printf("Deliverate web server starting on port 8080\n")
 
+	// Register all handlers
+	// TODO delete this nonsense, eventually
+	http.HandleFunc("/whoami", whoamiHandler)
+
+	// Start server
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
