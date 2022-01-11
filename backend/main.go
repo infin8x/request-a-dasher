@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -19,6 +21,16 @@ type DoorDashClaims struct {
 }
 
 func main() {
+	// TODO delete this nonsense, eventually
+	http.HandleFunc("/whoami", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "I am Deliverate! Like Deliberate but with Delivery :troll_face:")
+	})
+
+	fmt.Printf("Deliverate web server starting on port 8080\n")
+
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal(err)
+	}
 
 	// TODO add secrets management and roll this secret before making the repository public
 	accessKey := &DoorDashAccessKey{
