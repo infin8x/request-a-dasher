@@ -2,22 +2,33 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/golang-jwt/jwt"
+	auth "github.com/infin8x/deliverate/backend/auth"
+
+	"github.com/gorilla/mux"
 )
 
-type DoorDashAccessKey struct {
-	developerId   string
-	keyId         string
-	signingSecret string
-}
+var DoorDashV2APIPrefix string = "https://openapi.doordash.com/drive/v2/"
 
-type DoorDashClaims struct {
-	*jwt.StandardClaims
-	keyId string
+func main() {
+	fmt.Printf("Deliverate web server starting on port 8080\n")
+
+	// Initialize the Gorilla mux
+	r := mux.NewRouter()
+
+	// Register all handlers
+	// TODO delete this nonsense, eventually
+	r.HandleFunc("/whoami", whoamiHandler)
+	r.HandleFunc("/doordash/deliveries/{id}", DeliveryHandler)
+
+	// Start server
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		log.Fatal(err)
+	}
+
 }
 
 func whoamiHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,46 +45,37 @@ func whoamiHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "I am Deliverate! Like Deliberate but with Delivery :troll_face:")
 }
 
-func main() {
-	fmt.Printf("Deliverate web server starting on port 8080\n")
-
-	// Register all handlers
-	// TODO delete this nonsense, eventually
-	http.HandleFunc("/whoami", whoamiHandler)
-
-	// Start server
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	}
-
-	// TODO add secrets management and roll this secret before making the repository public
-	accessKey := &DoorDashAccessKey{
-		developerId:   "14e84291-d900-4c20-8528-ed6ca8de660f",
-		keyId:         "9523c67d-e0c5-41c9-9702-9a67111338c4",
-		signingSecret: "xbEg06vXu2zSQQEKRCufcRPKkv7wJOTvihSgaj9G_cc",
-	}
-
-	t := jwt.New(jwt.SigningMethodHS256)
-
-	t.Header["dd-ver"] = "DD-JWT-V1"
-
-	t.Claims = &DoorDashClaims{
-		&jwt.StandardClaims{
-
-			Issuer:    accessKey.developerId,
-			Audience:  "doordash",
-			ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-		accessKey.keyId,
-	}
-
-	ss, err := t.SignedString([]byte(accessKey.signingSecret))
+func DeliveryHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "Handling delivery with ID: %v\n", vars["id"])
+	// Get a token
+	token, err := auth.GetJWT()
 
 	if err != nil {
-		fmt.Printf("%v", err)
-	} else {
-		fmt.Printf("%v", ss)
+		log.Fatal(err)
+	}
+	fmt.Print(token)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", DoorDashV2APIPrefix+"deliveries/"+vars["id"], nil)
+
+	if err != nil {
+		fmt.Print(err.Error())
 	}
 
+	req.Header.Add("Authorization", "Bearer "+token)
+	res, err := client.Do(req)
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	responseData, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+
+	fmt.Print(string(responseData))
 }
