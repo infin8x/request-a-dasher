@@ -47,13 +47,14 @@ func whoamiHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeliveryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "Handling delivery with ID: %v\n", vars["id"])
 	// Get a token
 	token, err := auth.GetJWT()
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("Error getting a JWT: %v\n", err.Error())
+		http.Error(w, "Couldn't authenticate with DoorDash", http.StatusInternalServerError)
+		return
 	}
 	fmt.Print(token)
 

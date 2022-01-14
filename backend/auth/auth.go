@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -23,8 +24,8 @@ func GetJWT() (string, error) {
 	// TODO add secrets management and roll this secret before making the repository public
 	accessKey := &DoorDashAccessKey{
 		developerId:   "14e84291-d900-4c20-8528-ed6ca8de660f",
-		keyId:         "9523c67d-e0c5-41c9-9702-9a67111338c4",
-		signingSecret: "xbEg06vXu2zSQQEKRCufcRPKkv7wJOTvihSgaj9G_cc",
+		keyId:         "6cdda623-edcc-4c27-8a5e-58750f24abde",
+		signingSecret: "AeSSabdqLknKnZND_lnGBPbS9VzzamFTOw9mvLFheBQ",
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, &DoorDashClaims{
@@ -39,14 +40,14 @@ func GetJWT() (string, error) {
 	})
 	t.Header["dd-ver"] = "DD-JWT-V1"
 
-	// decodedString, err := base64.URLEncoding.DecodeString(accessKey.signingSecret)
-	// if err != nil {
-	// 	return "", err
-	// }
-
-	ss, err := t.SignedString(accessKey.signingSecret)
+	decodedSigningSecret, err := base64.RawURLEncoding.DecodeString(accessKey.signingSecret)
 	if err != nil {
 		return "", err
 	}
-	return ss, nil
+
+	jwt, err := t.SignedString(decodedSigningSecret)
+	if err != nil {
+		return "", err
+	}
+	return jwt, nil
 }
