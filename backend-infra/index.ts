@@ -7,6 +7,7 @@ import * as docker from "@pulumi/docker";
 
 const resourceGroup = new resources.ResourceGroup("deliverate-backend");
 
+// Build and publish container
 const registry = new containerregistry.Registry("registry", {
     resourceGroupName: resourceGroup.name,
     sku: {
@@ -34,6 +35,7 @@ const image = new docker.Image(imageName, {
     },
 });
 
+// Publish webapp 
 const plan = new web.AppServicePlan("deliverate-plan", {
     resourceGroupName: resourceGroup.name,
     kind: "Linux",
@@ -43,3 +45,33 @@ const plan = new web.AppServicePlan("deliverate-plan", {
         tier: "Basic",
     },
 });
+
+const deliverateBackendApp = new web.WebApp("deliverate-backend", {
+    resourceGroupName: resourceGroup.name,
+    serverFarmId: plan.id,
+    siteConfig: {
+        appSettings: [
+            {
+                name: "DOCKER_REGISTRY_SERVER_URL",
+                value: pulumi.interpolate`https://${registry.loginServer}`,
+            },
+            {
+                name: "DOCKER_REGISTRY_SERVER_USERNAME",
+                value: adminUsername,
+            },
+            {
+                name: "DOCKER_REGISTRY_SERVER_PASSWORD",
+                value: adminPassword,
+            },
+            {
+                name: "WEBSITES_PORT",
+                value: "8080",
+            },
+        ],
+        alwaysOn: true,
+        linuxFxVersion: pulumi.interpolate`DOCKER|${image.imageName}`,
+    },
+    httpsOnly: true,
+});
+
+export const backendEndpoint = pulumi.interpolate`https://${deliverateBackendApp.defaultHostName}`;
