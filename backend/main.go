@@ -47,36 +47,44 @@ func whoamiHandler(w http.ResponseWriter, r *http.Request) {
 
 func DeliveryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Handling delivery with ID: %v\n", vars["id"])
+	fmt.Printf("Handling delivery with ID: %v\n", vars["id"])
+
 	// Get a token
 	token, err := auth.GetJWT()
-
 	if err != nil {
-		fmt.Printf("Error getting a JWT: %v\n", err.Error())
+		fmt.Printf("Unable to get a JWT: %v\n", err.Error())
 		http.Error(w, "Couldn't authenticate with DoorDash", http.StatusInternalServerError)
 		return
 	}
-	fmt.Print(token)
+	fmt.Printf("Bearer token\n============\n%v\n", token)
 
+	// Create a client and prepare the request
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", DoorDashV2APIPrefix+"deliveries/"+vars["id"], nil)
-
 	if err != nil {
-		fmt.Print(err.Error())
+		fmt.Printf("Unable to create an http client: %v\n", err.Error())
+		http.Error(w, "Could connect to DoorDash", http.StatusInternalServerError)
+		return
 	}
 
+	// Add the authorization header and do the request
 	req.Header.Add("Authorization", "Bearer "+token)
 	res, err := client.Do(req)
-
 	if err != nil {
-		fmt.Print(err.Error())
+		// TODO better/more specific error code handling
+		fmt.Printf("Unable to request details of the delivery: %v\n", err.Error())
+		// TODO print a machine-readable error to http.Error
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
 	}
 
 	responseData, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
-		fmt.Print(err.Error())
+		fmt.Printf("Unable to parse details of the delivery: %v\n", err.Error())
+		// TODO print a machine-readable error to http.Error
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
 	}
 
-	fmt.Print(string(responseData))
+	fmt.Fprint(w, string(responseData))
 }
