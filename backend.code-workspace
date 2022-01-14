@@ -1,9 +1,15 @@
 {
 	"folders": [
 		{
+			"name": "backend-infra",
+			"path": "backend-infra"
+		},
+		{
+			"name": "backend",
 			"path": "backend"
 		},
 		{
+			"name": "auth",
 			"path": "backend/auth"
 		}
 	],
