@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -40,17 +41,17 @@ func main() {
 	// Initialize the Gorilla mux
 	r := mux.NewRouter()
 
-	// Register API handlers
-	// TODO delete this nonsense, eventually
-	r.HandleFunc("/whoami", whoamiHandler).Methods("GET")
-	r.HandleFunc("/doordash/deliveries/{id}", GETDeliveryHandler).Methods("GET")
-	r.HandleFunc("/doordash/deliveries", POSTDeliveryHandler).Methods("POST")
-
 	// Register website handlers
-	r.HandleFunc("/", indexHandler).Methods("GET")
+	r.HandleFunc("/", indexGETHandler).Methods("GET")
 	r.HandleFunc("/", indexPOSTHandler).Methods("POST")
+	r.HandleFunc("/status", statusGETHandler).Methods("GET")
+	r.HandleFunc("/status/{id}", statusGETHandler).Methods("GET")
 
-	// Register static file handler
+	// Register API handlers
+	r.HandleFunc("/doordash/deliveries/{id}", deliveriesGETHandler).Methods("GET")
+	r.HandleFunc("/doordash/deliveries", deliveriesPOSTHandler).Methods("POST")
+
+	// Lastly, register static file handlers
 	r.PathPrefix("/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./static/"))))
 
 	// Start server
@@ -60,7 +61,8 @@ func main() {
 
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
+func indexGETHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("Index page\n==========\n")
 	tmplPath := path.Join("templates", "index.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 
@@ -74,6 +76,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
 	}
+
+	fmt.Print("\n")
 }
 
 func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
@@ -84,16 +88,7 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get a token
-	token, err := auth.GetJWT()
-	if err != nil {
-		fmt.Printf("Unable to get a JWT: %v\n", err.Error())
-		http.Error(w, "Couldn't authenticate with DoorDash", http.StatusInternalServerError)
-		return
-	}
-	fmt.Printf("Bearer token\n============\n%v\n", token)
-
-	// Prepare the request
+	// Create the request body
 	body := Delivery{
 		ExternalDeliveryId:  fmt.Sprint(time.Now().Unix()),
 		PickupAddress:       r.FormValue("whereFrom"),
@@ -109,6 +104,8 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		Currency:            "usd",
 		Tip:                 0,
 	}
+
+	// Prepare the request as JSON
 	bodyJson, err := json.Marshal(body)
 	if err != nil {
 		fmt.Printf("Unable to create the request body: %v\n", err.Error())
@@ -116,71 +113,100 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create a client
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", DoorDashV2APIPrefix+"deliveries", bytes.NewBuffer(bodyJson))
+	response, err := createDelivery(bodyJson)
 	if err != nil {
-		fmt.Printf("Unable to create an http client: %v\n", err.Error())
-		http.Error(w, "Could connect to DoorDash", http.StatusInternalServerError)
+		http.Error(w,
+			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			http.StatusInternalServerError)
 		return
 	}
 
-	// Add the authorization header and do the request
-	req.Header.Add("Authorization", "Bearer "+token)
-	res, err := client.Do(req)
+	fmt.Fprint(w, response)
+}
+
+func statusGETHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("Status page\n===========\n")
+	vars := mux.Vars(r)
+	if vars["id"] != "" {
+		fmt.Printf("Requesting details of delivery with ID: %v\n", vars["id"])
+	} else {
+		fmt.Print("Requesting status page with no delivery ID\n")
+	}
+
+	tmplPath := path.Join("templates", "status.html")
+	tmpl, err := template.ParseFiles(tmplPath)
+
 	if err != nil {
-		// TODO better/more specific error code handling
-		fmt.Printf("Unable to request creation of the delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
+		fmt.Printf("Unable to parse template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
 		return
 	}
 
-	responseData, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		fmt.Printf("Unable to parse ther response details of the newly-created delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
+	if err := tmpl.Execute(w, nil); err != nil {
+		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
-		return
 	}
 
-	fmt.Fprint(w, string(responseData))
+	fmt.Print("\n")
 }
 
-func whoamiHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/whoami" {
-		http.Error(w, "404 not found", http.StatusNotFound)
-		return
-	}
-
-	if r.Method != "GET" {
-		http.Error(w, "Method is not supported", http.StatusMethodNotAllowed)
-		return
-	}
-
-	fmt.Fprint(w, "I am Deliverate! Like Deliberate but with Delivery :troll_face:")
-}
-
-func GETDeliveryHandler(w http.ResponseWriter, r *http.Request) {
+func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	fmt.Printf("Requesting details of delivery with ID: %v\n", vars["id"])
 
+	response, err := getDelivery(vars["id"])
+	if err != nil {
+		http.Error(w,
+			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			http.StatusInternalServerError)
+		return
+	}
+
+	toreturn, err := json.MarshalIndent(response, "", "  ")
+	fmt.Fprint(w, string(toreturn))
+}
+
+func deliveriesPOSTHandler(w http.ResponseWriter, r *http.Request) {
+	// Get request body
+	defer r.Body.Close()
+	bodyJson, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("Unable to parse the request body: %v\n", err.Error())
+		http.Error(w, "Couldn't understand your request", http.StatusBadRequest)
+		return
+	}
+
+	// Parse request JSON
+	var bodyMap map[string]interface{}
+	json.Unmarshal([]byte(bodyJson), &bodyMap)
+	fmt.Printf("Creating a new delivery with external_delivery_id: %v\n", bodyMap["external_delivery_id"])
+
+	response, err := createDelivery(bodyJson)
+	if err != nil {
+		http.Error(w,
+			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprint(w, response)
+}
+
+func getDelivery(externalDeliveryId string) (Delivery, error) {
 	// Get a token
 	token, err := auth.GetJWT()
 	if err != nil {
 		fmt.Printf("Unable to get a JWT: %v\n", err.Error())
-		http.Error(w, "Couldn't authenticate with DoorDash", http.StatusInternalServerError)
-		return
+		return Delivery{}, errors.New("we couldn't authenticate with DoorDash")
 	}
 	fmt.Printf("Bearer token\n============\n%v\n", token)
 
 	// Create a client and prepare the request
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", DoorDashV2APIPrefix+"deliveries/"+vars["id"], nil)
+	req, err := http.NewRequest("GET", DoorDashV2APIPrefix+"deliveries/"+externalDeliveryId, nil)
 	if err != nil {
 		fmt.Printf("Unable to create an http client: %v\n", err.Error())
-		http.Error(w, "Could connect to DoorDash", http.StatusInternalServerError)
-		return
+		return Delivery{}, errors.New("we couldn't connect to DoorDash")
 	}
 
 	// Add the authorization header and do the request
@@ -189,53 +215,41 @@ func GETDeliveryHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// TODO better/more specific error code handling
 		fmt.Printf("Unable to request details of the delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
-		http.Error(w, "oh snap", http.StatusInternalServerError)
-		return
+		return Delivery{}, errors.New("we couldn't connect to DoorDash")
 	}
 
+	// Parse the response
 	responseData, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Printf("Unable to parse details of the delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
-		http.Error(w, "oh snap", http.StatusInternalServerError)
-		return
+		return Delivery{}, errors.New("something went wrong")
 	}
 
-	fmt.Fprint(w, string(responseData))
+	// Convert the response to our struct
+	delivery := Delivery{}
+	if err := json.Unmarshal(responseData, &delivery); err != nil {
+		fmt.Printf("Unable to parse details of the delivery: %v\n", err.Error())
+		return Delivery{}, errors.New("something went wrong")
+	}
+
+	return delivery, nil
 }
 
-func POSTDeliveryHandler(w http.ResponseWriter, r *http.Request) {
-	// Get request body
-	defer r.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Printf("Unable to parse the request body: %v\n", err.Error())
-		http.Error(w, "Couldn't understand your request", http.StatusBadRequest)
-		return
-	}
-
-	// Parse request JSON
-	var bodyJson map[string]interface{}
-	json.Unmarshal([]byte(bodyBytes), &bodyJson)
-	fmt.Printf("Creating a new delivery with external_delivery_id: %v\n", bodyJson["external_delivery_id"])
-
+func createDelivery(apiRequestBody []byte) (string, error) {
 	// Get a token
 	token, err := auth.GetJWT()
 	if err != nil {
 		fmt.Printf("Unable to get a JWT: %v\n", err.Error())
-		http.Error(w, "Couldn't authenticate with DoorDash", http.StatusInternalServerError)
-		return
+		return "", errors.New("we couldn't authenticate with DoorDash")
 	}
 	fmt.Printf("Bearer token\n============\n%v\n", token)
 
 	// Create a client and prepare the request
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", DoorDashV2APIPrefix+"deliveries", bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequest("POST", DoorDashV2APIPrefix+"deliveries", bytes.NewBuffer(apiRequestBody))
 	if err != nil {
 		fmt.Printf("Unable to create an http client: %v\n", err.Error())
-		http.Error(w, "Could connect to DoorDash", http.StatusInternalServerError)
-		return
+		return "", errors.New("we couldn't connect to DoorDash")
 	}
 
 	// Add the authorization header and do the request
@@ -244,18 +258,15 @@ func POSTDeliveryHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// TODO better/more specific error code handling
 		fmt.Printf("Unable to request creation of the delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
-		http.Error(w, "oh snap", http.StatusInternalServerError)
-		return
+		return "", errors.New("we couldn't connect to DoorDash")
 	}
 
+	// Parse the response
 	responseData, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Printf("Unable to parse ther response details of the newly-created delivery: %v\n", err.Error())
-		// TODO print a machine-readable error to http.Error
-		http.Error(w, "oh snap", http.StatusInternalServerError)
-		return
+		fmt.Printf("Unable to parse the response details of the newly-created delivery: %v\n", err.Error())
+		return "", errors.New("we couldn't connect to DoorDash")
 	}
 
-	fmt.Fprint(w, string(responseData))
+	return string(responseData), nil
 }
