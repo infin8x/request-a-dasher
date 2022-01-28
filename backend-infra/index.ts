@@ -5,7 +5,7 @@ import * as web from "@pulumi/azure-native/web";
 
 import * as docker from "@pulumi/docker";
 
-const resourceGroup = new resources.ResourceGroup("deliverate-backend");
+const resourceGroup = new resources.ResourceGroup("RAD-backend");
 
 // Build and publish container
 const registry = new containerregistry.Registry("registry", {
@@ -24,7 +24,7 @@ const credentials = containerregistry.listRegistryCredentialsOutput({
 const adminUsername = credentials.apply(credentials => credentials.username!);
 const adminPassword = credentials.apply(credentials => credentials.passwords![0].value!);
 
-const imageName = "deliverate-backend";
+const imageName = "RAD-backend";
 const image = new docker.Image(imageName, {
     imageName: pulumi.interpolate`${registry.loginServer}/${imageName}:latest`,
     build: {context: `../backend/`},
@@ -36,7 +36,7 @@ const image = new docker.Image(imageName, {
 });
 
 // Publish webapp 
-const plan = new web.AppServicePlan("deliverate-plan", {
+const plan = new web.AppServicePlan("RAD-plan", {
     resourceGroupName: resourceGroup.name,
     kind: "Linux",
     reserved: true,
@@ -46,7 +46,7 @@ const plan = new web.AppServicePlan("deliverate-plan", {
     },
 });
 
-const deliverateBackendApp = new web.WebApp("deliverate-backend", {
+const RADBackendApp = new web.WebApp("RAD-backend", {
     resourceGroupName: resourceGroup.name,
     serverFarmId: plan.id,
     siteConfig: {
@@ -74,4 +74,4 @@ const deliverateBackendApp = new web.WebApp("deliverate-backend", {
     httpsOnly: true,
 });
 
-export const backendEndpoint = pulumi.interpolate`https://${deliverateBackendApp.defaultHostName}`;
+export const backendEndpoint = pulumi.interpolate`https://${RADBackendApp.defaultHostName}`;

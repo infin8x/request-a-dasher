@@ -12,7 +12,7 @@ import (
 	"path"
 	"time"
 
-	auth "github.com/infin8x/deliverate/backend/auth"
+	auth "github.com/infin8x/request-a-dasher/backend/auth"
 
 	"github.com/gorilla/mux"
 )
@@ -58,7 +58,7 @@ type DeliveryResponse struct {
 }
 
 func main() {
-	fmt.Printf("Deliverate web server starting on port 8080\n")
+	fmt.Printf("RAD web server starting on port 8080\n")
 
 	// Initialize the Gorilla mux
 	r := mux.NewRouter()

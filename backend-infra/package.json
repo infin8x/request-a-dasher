@@ -1,5 +1,5 @@
 {
-    "name": "deliverate-backend",
+    "name": "request-a-dasher-backend",
     "devDependencies": {
         "@types/node": "^14"
     },
