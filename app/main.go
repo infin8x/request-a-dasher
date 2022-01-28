@@ -12,7 +12,7 @@ import (
 	"path"
 	"time"
 
-	auth "github.com/infin8x/request-a-dasher/backend/auth"
+	auth "github.com/infin8x/request-a-dasher/app/auth"
 
 	"github.com/gorilla/mux"
 )

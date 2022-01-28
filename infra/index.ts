@@ -28,7 +28,7 @@ const adminPassword = credentials.apply(credentials => credentials.passwords![0]
 
 const image = new docker.Image(productName, {
     imageName: pulumi.interpolate`${registry.loginServer}/${productName}:latest`,
-    build: {context: `../backend/`},
+    build: {context: `../app/`},
     registry: {
         server: registry.loginServer,
         username: adminUsername,
@@ -47,7 +47,7 @@ const plan = new web.AppServicePlan(productName, {
     },
 });
 
-const RADBackendApp = new web.WebApp(productName, {
+const app = new web.WebApp(productName, {
     resourceGroupName: resourceGroup.name,
     serverFarmId: plan.id,
     siteConfig: {
@@ -75,4 +75,4 @@ const RADBackendApp = new web.WebApp(productName, {
     httpsOnly: true,
 });
 
-export const backendEndpoint = pulumi.interpolate`https://${RADBackendApp.defaultHostName}`;
+export const endpoint = pulumi.interpolate`https://${app.defaultHostName}`;

@@ -1,4 +1,4 @@
-module github.com/infin8x/request-a-dasher/backend/auth
+module github.com/infin8x/request-a-dasher/app/auth
 
 go 1.17
 

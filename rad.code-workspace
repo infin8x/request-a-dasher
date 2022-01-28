@@ -1,16 +1,16 @@
 {
 	"folders": [
 		{
-			"name": "backend-infra",
-			"path": "backend-infra"
+			"name": "app",
+			"path": "app"
 		},
 		{
-			"name": "backend",
-			"path": "backend"
+			"name": "infra",
+			"path": "infra"
 		},
 		{
 			"name": "auth",
-			"path": "backend/auth"
+			"path": "app/auth"
 		}
 	],
 	"settings": {}

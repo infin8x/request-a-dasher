@@ -1,5 +1,5 @@
 {
-    "name": "request-a-dasher-backend",
+    "name": "request-a-dasher",
     "devDependencies": {
         "@types/node": "^14"
     },
