@@ -5,7 +5,9 @@ import * as web from "@pulumi/azure-native/web";
 
 import * as docker from "@pulumi/docker";
 
-const resourceGroup = new resources.ResourceGroup("RAD-backend");
+const productName = "request-a-dasher";
+
+const resourceGroup = new resources.ResourceGroup(productName);
 
 // Build and publish container
 const registry = new containerregistry.Registry("registry", {
@@ -24,9 +26,8 @@ const credentials = containerregistry.listRegistryCredentialsOutput({
 const adminUsername = credentials.apply(credentials => credentials.username!);
 const adminPassword = credentials.apply(credentials => credentials.passwords![0].value!);
 
-const imageName = "RAD-backend";
-const image = new docker.Image(imageName, {
-    imageName: pulumi.interpolate`${registry.loginServer}/${imageName}:latest`,
+const image = new docker.Image(productName, {
+    imageName: pulumi.interpolate`${registry.loginServer}/${productName}:latest`,
     build: {context: `../backend/`},
     registry: {
         server: registry.loginServer,
@@ -36,7 +37,7 @@ const image = new docker.Image(imageName, {
 });
 
 // Publish webapp 
-const plan = new web.AppServicePlan("RAD-plan", {
+const plan = new web.AppServicePlan(productName, {
     resourceGroupName: resourceGroup.name,
     kind: "Linux",
     reserved: true,
@@ -46,7 +47,7 @@ const plan = new web.AppServicePlan("RAD-plan", {
     },
 });
 
-const RADBackendApp = new web.WebApp("RAD-backend", {
+const RADBackendApp = new web.WebApp(productName, {
     resourceGroupName: resourceGroup.name,
     serverFarmId: plan.id,
     siteConfig: {
