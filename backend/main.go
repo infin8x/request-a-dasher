@@ -143,7 +143,9 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, response)
+	fmt.Print(response)
+
+	http.Redirect(w, r, fmt.Sprintf("/status/%s", body.ExternalDeliveryId), http.StatusFound)
 }
 
 func statusGETHandler(w http.ResponseWriter, r *http.Request) {
