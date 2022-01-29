@@ -21,13 +21,13 @@
 
         <ul class="nav nav-pills">
           <li class="nav-item"><a href="/" class="nav-link active" aria-current="page">Home</a></li>
-          <li class="nav-item"><a href="/status" class="nav-link">Check delivery status</a></li>
+          <li class="nav-item"><a href="/deliveries" class="nav-link">Deliveries</a></li>
         </ul>
       </header>
       <form method="POST" action="/">
         <div class="row g-5">
           <div class="col-lg">
-            <h3 class="mb-3">Where from?</h4>
+            <h2 class="mb-3 fs-4">Where from?</h2>
               <div class="row mb-3">
                 <div class="col">
                   <label for="whereFrom" class="form-label">Address</label>
@@ -37,20 +37,28 @@
               </div>
               <div class="row mb-3">
                 <div class="col">
-                  <label for="pickupInstructions" class="form-label">Pickup instructions</label>
-                  <input type="text" class="form-control" id="pickupInstructions" name="pickupInstructions">
+                  <label for="pickupPhone" class="form-label">Phone number</label>
+                  <div class="input-group">
+                    <span class="input-group-text">+1</span>
+                    <input type="tel" pattern="\([0-9]{3}\) [0-9]{3}-[0-9]{4}" class="form-control phone"
+                      id="pickupPhone" name="pickupPhone" required>
+                  </div>
+                  <div id="whereFromHelp" class="form-text">Who should the Dasher call if there's a pickup problem?
+                  </div>
                 </div>
               </div>
-              <div class="row mb-3">
-                <div class="col">
-                  <label for="pickupPhone" class="form-label">Phone number</label>
-                  <input type="tel" pattern="\+1[0-9]{3}[0-9]{3}[0-9]{4}" class="form-control" id="pickupPhone" name="pickupPhone" required>
-                  <div id="whereFromHelp" class="form-text">Provide a 10-digit US phone number, in case there's a problem with pickup.</div>
+              <div class="collapse extras" id="whereFromExtras">
+                <div class="row mb-3">
+                  <div class="col">
+                    <label for="pickupInstructions" class="form-label">Pickup instructions <span
+                        class="text-muted">(Optional)</span></label>
+                    <input type="text" class="form-control" id="pickupInstructions" name="pickupInstructions">
+                  </div>
                 </div>
               </div>
           </div>
           <div class="col-lg">
-            <h3 class="mb-3">Where to?</h4>
+            <h2 class="mb-3 fs-4">Where to?</h2>
               <div class="row mb-3">
                 <div class="col">
                   <label for="whereTo" class="form-label">Address</label>
@@ -60,28 +68,76 @@
               </div>
               <div class="row mb-3">
                 <div class="col">
-                  <label for="dropoffInstructions" class="form-label">Drop-off instructions</label>
-                  <input type="text" class="form-control" id="dropoffInstructions" name="dropoffInstructions">
+                  <label for="dropoffPhone" class="form-label">Phone number</label>
+                  <div class="input-group">
+                    <span class="input-group-text">+1</span>
+                    <input type="tel" pattern="\([0-9]{3}\) [0-9]{3}-[0-9]{4}" class="form-control phone"
+                      id="dropoffPhone" name="dropoffPhone" required>
+                  </div>
+                  <div id="whereFromHelp" class="form-text">Who should the Dasher call if there's a delivery problem?
+                  </div>
                 </div>
               </div>
-              <div class="row mb-3">
-                <div class="col">
-                  <label for="dropoffPhone" class="form-label">Phone number</label>
-                  <input type="tel" pattern="\+1[0-9]{3}[0-9]{3}[0-9]{4}" class="form-control" id="dropoffPhone" name="dropoffPhone" required>
-                  <div id="whereFromHelp" class="form-text">Provide a 10-digit US phone number, in case there's a problem with drop-off.</div>
+              <div class="collapse extras" id="whereToExtras">
+                <div class="row mb-3">
+                  <div class="col">
+                    <label for="dropoffBusinessName" class="form-label">Receiver's name <span
+                        class="text-muted">(Optional)</span></label>
+                    <input type="text" class="form-control" id="dropoffBusinessName" name="dropoffBusinessName">
+                    <div id="whereFromHelp" class="form-text">Who should the Dasher be looking for?
+                    </div>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col">
+                    <label for="dropoffInstructions" class="form-label">Drop-off instructions <span
+                        class="text-muted">(Optional)</span></label>
+                    <input type="text" class="form-control" id="dropoffInstructions" name="dropoffInstructions">
+                  </div>
                 </div>
               </div>
           </div>
         </div>
-
         <hr class="my-4">
-        <button class="w-100 btn btn-primary btn-lg" type="submit">Request delivery</button>
+        <div class="row g-5">
+
+          <div class="col">
+            <label for="orderValue" class="form-label">Order value</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="text" pattern="[0-9]{0,3}.[0-9]{2}" class="form-control money" id="orderValue" name="orderValue" required>
+            </div>
+          </div>
+          <div class="col">
+            <label for="tip" class="form-label">Tip</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="text" pattern="[0-9]{0,3}.[0-9]{2}" class="form-control money" id="tip" name="tip" required>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="row mb-3">
+          <div class="col-sm-6 col-md-8 mb-3">
+            <button class="w-100 btn btn-primary btn-lg" type="submit">Request delivery</button>
+          </div>
+          <div class="col-sm-6 col-md-4 mb-3">
+            <button class="w-100 btn btn-outline-secondary btn-lg" type="button" data-bs-toggle="collapse"
+              data-bs-target=".extras" aria-expanded="false" aria-controls="collapseExample">
+              Provide more info
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
     crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+    integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+  <script src="/js/jquery.mask.min.js"></script>
+  <script src="/js/index.js"></script>
 </body>
 
 </html>

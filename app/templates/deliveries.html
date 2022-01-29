@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+  <title>{{.ExternalDeliveryId}} delivery details | Request a Dasher</title>
+</head>
+
+<body>
+
+  <main>
+    <div class="container">
+      <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+        <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+          <span class="fs-4">Request a Dasher</span>
+        </a>
+
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+          <li class="nav-item"><a href="/deliveries" class="nav-link active" aria-current="page">Deliveries</a>
+          </li>
+        </ul>
+      </header>
+      <div class="row">
+        <div class="column">
+          <h2 class="mb-3">Deliveries</h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="row g-5">
+            <h2 class="mb-3 fs-4">Select a delivery</h2>
+          </div>
+          <form method="POST" action="/status">
+            <div class="row g-2">
+              <div class="col">
+                <div class="input-group">
+                  <span class="input-group-text">RAD-</span>
+                  <input type="text" class="form-control" id="externalDeliveryId" name="externalDeliveryId" required
+                    value="{{.DeprefixedDeliveryId}}">
+                </div>
+              </div>
+              <div class="col-sm-auto">
+                <button class="btn btn-primary" type="submit">Get status</button>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        <div class="col-sm-8">
+          <h2 class="mb-3 fs-4">Delivery details</h2>
+          <p>Delivery status: <strong>{{.DeliveryStatus}}</strong></p>
+          <p>{{.}}</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>

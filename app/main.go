@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	auth "github.com/infin8x/request-a-dasher/app/auth"
@@ -37,6 +39,7 @@ type DeliveryRequest struct {
 
 type DeliveryResponse struct {
 	ExternalDeliveryId   string    `json:"external_delivery_id"`
+	DeprefixedDeliveryId string    `json:"dexprefixed_delivery_id"`
 	Currency             string    `json:"currency"`
 	DeliveryStatus       string    `json:"delivery_status"`
 	Fee                  int       `json:"fee"`
@@ -66,15 +69,16 @@ func main() {
 	// Register website handlers
 	r.HandleFunc("/", indexGETHandler).Methods("GET")
 	r.HandleFunc("/", indexPOSTHandler).Methods("POST")
-	r.HandleFunc("/status", statusGETHandler).Methods("GET")
-	r.HandleFunc("/status/{id}", statusGETHandler).Methods("GET")
+	r.HandleFunc("/deliveries", deliveriesGETHandler).Methods("GET")
+	r.HandleFunc("/deliveries", deliveriesPOSTHandler).Methods("POST")
+	r.HandleFunc("/deliveries/{id}", deliveriesGETHandler).Methods("GET")
 
-	// Register API handlers
-	r.HandleFunc("/doordash/deliveries/{id}", deliveriesGETHandler).Methods("GET")
-	r.HandleFunc("/doordash/deliveries", deliveriesPOSTHandler).Methods("POST")
+	// Register API handlers - can probably delete these
+	r.HandleFunc("/doordash/deliveries/{id}", dddeliveriesGETHandler).Methods("GET")
+	r.HandleFunc("/doordash/deliveries", dddeliveriesPOSTHandler).Methods("POST")
 
 	// Lastly, register static file handlers
-	r.PathPrefix("/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("./static/"))))
+	r.PathPrefix("/").Handler(http.FileServer(http.Dir("./static/")))
 
 	// Start server
 	if err := http.ListenAndServe(":8080", r); err != nil {
@@ -103,6 +107,8 @@ func indexGETHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("Index page form submission\n==========================\n")
+
 	// Get the form details
 	if err := r.ParseForm(); err != nil {
 		fmt.Printf("Unable to parse form: %v\n", err.Error())
@@ -111,21 +117,37 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create the request body
+	orderValue, err := strconv.ParseFloat(r.FormValue("orderValue"), 64)
+	if err != nil {
+		fmt.Printf("Unable to parse order value: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
+
+	tip, err := strconv.ParseFloat(r.FormValue("tip"), 64)
+	if err != nil {
+		fmt.Printf("Unable to parse tip: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
+
 	body := DeliveryRequest{
-		ExternalDeliveryId:  fmt.Sprint(time.Now().Unix()),
+		ExternalDeliveryId:  prefixDeliveryId(fmt.Sprint(time.Now().Unix())),
 		PickupAddress:       r.FormValue("whereFrom"),
-		PickupBusinessName:  "",
-		PickupPhoneNumber:   r.FormValue("pickupPhone"),
+		PickupBusinessName:  "DoorDash",
+		PickupPhoneNumber:   "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("pickupPhone")),
 		PickupInstructions:  r.FormValue("pickupInstructions"),
 		PickupReferenceTag:  "Request a Dasher",
 		DropoffAddress:      r.FormValue("whereTo"),
-		DropoffBusinessName: "",
-		DropoffPhoneNumber:  r.FormValue("dropoffPhone"),
+		DropoffBusinessName: r.FormValue("dropoffBusinessName"),
+		DropoffPhoneNumber:  "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("pickupPhone")),
 		DropoffInstructions: r.FormValue("dropoffInstructions"),
-		OrderValue:          0,
+		OrderValue:          int(orderValue * 100), // DoorDash API expects all money in cents
 		Currency:            "usd",
-		Tip:                 0,
+		Tip:                 int(tip * 100), // DoorDash API expects all money in cents
 	}
+
+	// TODO move cents-handling logic to the SDK layer eventually
 
 	// Prepare the request as JSON
 	bodyJson, err := json.Marshal(body)
@@ -145,20 +167,13 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Print(response)
 
-	http.Redirect(w, r, fmt.Sprintf("/status/%s", body.ExternalDeliveryId), http.StatusFound)
+	http.Redirect(w, r, fmt.Sprintf("/deliveries/%s", body.ExternalDeliveryId), http.StatusFound)
 }
 
-func statusGETHandler(w http.ResponseWriter, r *http.Request) {
+func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("Status page\n===========\n")
-	vars := mux.Vars(r)
-	if vars["id"] != "" {
-		fmt.Printf("Requesting details of delivery with ID: %v\n", vars["id"])
 
-	} else {
-		fmt.Print("Requesting status page with no delivery ID\n")
-	}
-
-	tmplPath := path.Join("templates", "status.html")
+	tmplPath := path.Join("templates", "deliveries.html")
 	tmpl, err := template.ParseFiles(tmplPath)
 
 	if err != nil {
@@ -167,7 +182,19 @@ func statusGETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get the delivery
+	vars := mux.Vars(r)
+	if vars["id"] == "" {
+		fmt.Print("Requesting status page with no delivery ID\n")
+
+		if err := tmpl.Execute(w, DeliveryResponse{}); err != nil {
+			fmt.Printf("Unable to execute template: %v\n", err.Error())
+			http.Error(w, "oh snap", http.StatusInternalServerError)
+		}
+		fmt.Print("\n")
+		return
+	}
+
+	fmt.Printf("Requesting details of delivery with ID: %v\n", vars["id"])
 	response, err := getDelivery(vars["id"])
 	if err != nil {
 		http.Error(w,
@@ -176,19 +203,33 @@ func statusGETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.DeprefixedDeliveryId = deprefixDeliveryId(response.ExternalDeliveryId)
 	if err := tmpl.Execute(w, response); err != nil {
 		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
 	}
-
 	fmt.Print("\n")
+
 }
 
-func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fmt.Printf("Requesting details of delivery with ID: %v\n", vars["id"])
+func deliveriesPOSTHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Print("Status page form submission\n===========================\n")
+	// Get the form details
+	if err := r.ParseForm(); err != nil {
+		fmt.Printf("Unable to parse form: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
 
-	response, err := getDelivery(vars["id"])
+	http.Redirect(w, r, fmt.Sprintf("/deliveries/%s", prefixDeliveryId(r.FormValue("externalDeliveryId"))), http.StatusFound)
+}
+
+func dddeliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := prefixDeliveryId(vars["id"])
+	fmt.Printf("Requesting details of delivery with ID: %v\n", id)
+
+	response, err := getDelivery(id)
 	if err != nil {
 		http.Error(w,
 			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
@@ -206,7 +247,7 @@ func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(toreturn))
 }
 
-func deliveriesPOSTHandler(w http.ResponseWriter, r *http.Request) {
+func dddeliveriesPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	// Get request body
 	defer r.Body.Close()
 	bodyJson, err := ioutil.ReadAll(r.Body)
@@ -309,4 +350,20 @@ func createDelivery(apiRequestBody []byte) (string, error) {
 	}
 
 	return string(responseData), nil
+}
+
+func mapFilterPhoneNumber(r rune) rune {
+	if r >= '0' && r <= '9' {
+		return r
+	}
+
+	return -1
+}
+
+func prefixDeliveryId(uniqueIdentifier string) string {
+	return "RAD-" + uniqueIdentifier
+}
+
+func deprefixDeliveryId(deliveryId string) string {
+	return strings.TrimLeft(deliveryId, "RAD-")
 }
