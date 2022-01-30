@@ -38,26 +38,35 @@ type DeliveryRequest struct {
 }
 
 type DeliveryResponse struct {
-	ExternalDeliveryId   string    `json:"external_delivery_id"`
-	DeprefixedDeliveryId string    `json:"dexprefixed_delivery_id"`
-	Currency             string    `json:"currency"`
+	ExternalDeliveryId  string `json:"external_delivery_id"`
+	PickupAddress       string `json:"pickup_address"`
+	PickupBusinessName  string `json:"pickup_business_name"`
+	PickupPhoneNumber   string `json:"pickup_phone_number"`
+	PickupInstructions  string `json:"pickup_instructions"`
+	PickupReferenceTag  string `json:"pickup_reference_tag"`
+	DropoffAddress      string `json:"dropoff_address"`
+	DropoffBusinessName string `json:"dropoff_business_name"`
+	DropoffPhoneNumber  string `json:"dropoff_phone_number"`
+	DropoffInstructions string `json:"dropoff_instructions"`
+	OrderValue          int    `json:"order_value"`
+	Currency            string `json:"currency"`
+	Tip                 int    `json:"tip"`
+
 	DeliveryStatus       string    `json:"delivery_status"`
-	Fee                  int       `json:"fee"`
-	PickupAddress        string    `json:"pickup_address"`
-	PickupBusinessName   string    `json:"pickup_business_name"`
-	PickupPhoneNumber    string    `json:"pickup_phone_number"`
-	PickupInstructions   string    `json:"pickup_instructions"`
-	PickupReferenceTag   string    `json:"pickup_reference_tag"`
-	DropoffAddress       string    `json:"dropoff_address"`
-	DropoffBusinessName  string    `json:"dropoff_business_name"`
-	DropoffPhoneNumber   string    `json:"dropoff_phone_number"`
-	DropoffInstructions  string    `json:"dropoff_instructions"`
-	OrderValue           int       `json:"order_value"`
-	PickupTimeEstimated  time.Time `json:"pickup_time_estimated"`
-	DropoffTimeEstimated time.Time `json:"dropoff_time_estimated"`
 	TrackingUrl          string    `json:"tracking_url"`
+	Fee                  int       `json:"fee"`
+	PickupTimeEstimated  time.Time `json:"pickup_time_estimated"`
+	PickupTimeActual     time.Time `json:"pickup_time_actual"`
+	DropoffTimeEstimated time.Time `json:"dropoff_time_estimated"`
+	DropoffTimeActual    time.Time `json:"dropoff_time_actual"`
 	ContactlessDropoff   bool      `json:"contactless_dropoff"`
-	Tip                  int       `json:"tip"`
+
+	DeprefixedDeliveryId             string
+	DeliveryStatusFriendly           string
+	DeliveryStatusPercentage         int
+	DeliveryStatusProgressBarClasses string
+	PickupTime                       time.Time
+	DropoffTime                      time.Time
 }
 
 func main() {
@@ -204,6 +213,7 @@ func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.DeprefixedDeliveryId = deprefixDeliveryId(response.ExternalDeliveryId)
+	response = addFriendlyResponseInfo(response)
 	if err := tmpl.Execute(w, response); err != nil {
 		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
@@ -366,4 +376,65 @@ func prefixDeliveryId(uniqueIdentifier string) string {
 
 func deprefixDeliveryId(deliveryId string) string {
 	return strings.TrimLeft(deliveryId, "RAD-")
+}
+
+func addFriendlyResponseInfo(delivery DeliveryResponse) DeliveryResponse {
+	delivery.PickupPhoneNumber = strings.Trim(delivery.PickupPhoneNumber, "+1")
+	delivery.DropoffPhoneNumber = strings.Trim(delivery.DropoffPhoneNumber, "+1")
+
+	switch delivery.DeliveryStatus {
+	case "created":
+		delivery.DeliveryStatusFriendly = "Your delivery has been created and is awaiting assignment to a Dasher."
+		delivery.DeliveryStatusPercentage = 12
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.PickupTime = delivery.PickupTimeEstimated
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+	case "confirmed":
+		delivery.DeliveryStatusFriendly = "Your delivery has been assigned to, and confirmed by, a Dasher."
+		delivery.DeliveryStatusPercentage = 24
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.PickupTime = delivery.PickupTimeEstimated
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+	case "enroute_to_pickup":
+		delivery.DeliveryStatusFriendly = "The Dasher is en route to your pick up location."
+		delivery.DeliveryStatusPercentage = 36
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.PickupTime = delivery.PickupTimeEstimated
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+	case "arrived_at_pickup":
+		delivery.DeliveryStatusFriendly = "The Dasher has arrived at your pick up location."
+		delivery.DeliveryStatusPercentage = 48
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.PickupTime = delivery.PickupTimeEstimated
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+	case "picked_up":
+		delivery.DeliveryStatusFriendly = "The Dasher has picked up your items and is heading to the drop off."
+		delivery.DeliveryStatusPercentage = 60
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+		delivery.PickupTime = delivery.PickupTimeActual
+	case "enroute_to_dropoff":
+		delivery.DeliveryStatusFriendly = "The Dasher is heading to the drop off location."
+		delivery.DeliveryStatusPercentage = 72
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+		delivery.PickupTime = delivery.PickupTimeActual
+	case "arrived_at_dropoff":
+		delivery.DeliveryStatusFriendly = "The Dasher has arrived at the drop off location."
+		delivery.DeliveryStatusPercentage = 84
+		delivery.DeliveryStatusProgressBarClasses = "progress-bar-striped progress-bar-animated"
+		delivery.DropoffTime = delivery.DropoffTimeEstimated
+		delivery.PickupTime = delivery.PickupTimeActual
+	case "delivered":
+		delivery.DeliveryStatusFriendly = "Your delivery is complete."
+		delivery.DeliveryStatusPercentage = 100
+		delivery.DeliveryStatusProgressBarClasses = "bg-success"
+		delivery.DropoffTime = delivery.DropoffTimeActual
+		delivery.PickupTime = delivery.PickupTimeActual
+	case "cancelled":
+		delivery.DeliveryStatusFriendly = "Your delivery was cancelled."
+		delivery.DeliveryStatusPercentage = 100
+		delivery.DeliveryStatusProgressBarClasses = "bg-danger"
+	}
+	return delivery
 }
