@@ -37,14 +37,15 @@ function initMap() {
     return __awaiter(this, void 0, void 0, function* () {
         let [fromMap, fromMarker] = setUpAutocomplete($('#whereFromMap')[0], $('#whereFrom')[0]);
         let [toMap, toMarker] = setUpAutocomplete($('#whereToMap')[0], $('#whereTo')[0]);
-        if (localStorage.getItem('whereFrom') !== '') {
-            $('#whereFrom').val(localStorage.getItem('whereFrom'));
-        }
-        if ($('#whereFrom').val() !== '') {
+        if ($('#whereTo').val() !== '') { // We're on the deliveries page
             getPlaceAndUpdateMap(fromMap, fromMarker, $('#whereFrom').val());
-        }
-        if ($('#whereTo').val() !== '') { // if on the deliveries page, also set the drop-off map to the correct address
             getPlaceAndUpdateMap(toMap, toMarker, $('#whereTo').val());
+        }
+        else { // We're on the request page
+            if (localStorage.getItem('whereFrom') !== '') {
+                $('#whereFrom').val(localStorage.getItem('whereFrom'));
+                getPlaceAndUpdateMap(fromMap, fromMarker, $('#whereFrom').val());
+            }
         }
     });
 }

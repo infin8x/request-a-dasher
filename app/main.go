@@ -149,7 +149,7 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		PickupReferenceTag:  "Request a Dasher",
 		DropoffAddress:      r.FormValue("whereTo"),
 		DropoffBusinessName: r.FormValue("dropoffBusinessName"),
-		DropoffPhoneNumber:  "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("pickupPhone")),
+		DropoffPhoneNumber:  "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("dropoffPhone")),
 		DropoffInstructions: r.FormValue("dropoffInstructions"),
 		OrderValue:          int(orderValue * 100), // DoorDash API expects all money in cents
 		Currency:            "usd",
