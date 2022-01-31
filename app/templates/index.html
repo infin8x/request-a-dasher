@@ -23,7 +23,7 @@
           <li class="nav-item"><a href="/deliveries" class="nav-link">Deliveries</a></li>
         </ul>
       </header>
-      <form method="POST" action="/">
+      <form id="form" method="POST" action="/">
         <div class="row g-5">
           <div class="col-lg">
             <h2 class="mb-3 fs-4">Where from?</h2>
@@ -122,7 +122,7 @@
             <button class="w-100 btn btn-primary btn-lg" type="submit">Request delivery</button>
           </div>
           <div class="col-sm-6 col-md-4 mb-3">
-            <button class="w-100 btn btn-outline-secondary btn-lg" type="button" data-bs-toggle="collapse"
+            <button class="w-100 btn btn-outline-secondary btn-lg" id="moreInfoButton" type="button" data-bs-toggle="collapse"
               data-bs-target=".extras" aria-expanded="false" aria-controls="collapseExample">
               Provide more info
             </button>

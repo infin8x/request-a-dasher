@@ -15,14 +15,31 @@ jQuery(() => {
         $(ele).text(new Date($(ele).text()).toLocaleString());
     });
     $('.currentTimezone').text(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    $('#moreInfoButton').on('click', () => {
+        if ($('#moreInfoButton').text().includes('more')) {
+            $('#moreInfoButton').text($('#moreInfoButton').text().replace('more', 'less'));
+        }
+        else {
+            $('#moreInfoButton').text($('#moreInfoButton').text().replace('less', 'more'));
+        }
+    });
+    // Save from address to localStorage, and get it out again if it's there
+    $('#form').on('submit', () => {
+        $('#form').find('input[type=submit]').prop('disabled', true);
+        localStorage.setItem('whereFrom', $('#whereFrom').val());
+    });
+    if (localStorage.getItem('whereFrom') !== null) {
+        $('#whereFrom').val(localStorage.getItem('whereFrom'));
+        // TODO figure out how to call getPlaceAndUpdateMap
+    }
 });
 function initMap() {
     return __awaiter(this, void 0, void 0, function* () {
         let [fromMap, fromMarker] = setUpAutocomplete($('#whereFromMap')[0], $('#whereFrom')[0]);
         let [toMap, toMarker] = setUpAutocomplete($('#whereToMap')[0], $('#whereTo')[0]);
         if ($('#whereFrom').val() !== '') { // if on the deliveries page, set the maps to the correct address
-            getPlaceAndUpdateMap(fromMap, fromMarker);
-            getPlaceAndUpdateMap(toMap, toMarker);
+            getPlaceAndUpdateMap(fromMap, fromMarker, $('#whereFrom').val());
+            getPlaceAndUpdateMap(toMap, toMarker, $('#whereTo').val());
         }
     });
 }
@@ -47,16 +64,16 @@ function setUpAutocomplete(mapElement, addressElement) {
         if (!place.geometry) {
             // User entered the name of a Place that was not suggested and
             // pressed the Enter key, or the Place Details request failed.
-            window.alert('No details available for input: \'' + place.name + '\'');
+            window.alert('Couldn\'t find any places that match: \'' + place.name + '\'');
             return;
         }
         renderAddress(googleMap, marker, place);
     });
-    return [googleMap, marker, autocomplete];
+    return [googleMap, marker];
 }
-function getPlaceAndUpdateMap(map, marker) {
+function getPlaceAndUpdateMap(map, marker, address) {
     let service = new google.maps.places.PlacesService(map);
-    service.findPlaceFromQuery({ query: $('#whereFrom').val(), fields: ["formatted_address", "geometry"] }, (results, status) => {
+    service.findPlaceFromQuery({ query: address, fields: ["formatted_address", "geometry"] }, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
             renderAddress(map, marker, results[0]);
         }

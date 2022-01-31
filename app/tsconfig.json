@@ -4,5 +4,5 @@
         "allowJs": false,
         "target": "ES6",
     },
-    "include": ["./ts_src/**/*.ts"]
+    "include": ["./ts/**/*.ts"]
 }

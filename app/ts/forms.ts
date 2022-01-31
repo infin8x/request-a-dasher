@@ -7,6 +7,25 @@ jQuery(() => {
     $(ele).text(new Date($(ele).text()).toLocaleString())
   });
   $('.currentTimezone').text(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  $('#moreInfoButton').on('click', () => {
+    if ($('#moreInfoButton').text().includes('more')) {
+      $('#moreInfoButton').text($('#moreInfoButton').text().replace('more', 'less'));
+    } else {
+      $('#moreInfoButton').text($('#moreInfoButton').text().replace('less', 'more'));
+    }
+  });
+
+  // Save from address to localStorage, and get it out again if it's there
+  $('#form').on('submit', () => {
+    $('#form').find('input[type=submit]').prop('disabled', true);
+    localStorage.setItem('whereFrom', <string>$('#whereFrom').val());
+  });
+
+  if (localStorage.getItem('whereFrom') !== null) {
+    $('#whereFrom').val(localStorage.getItem('whereFrom'));
+    // TODO figure out how to call getPlaceAndUpdateMap
+  }
 });
 
 async function initMap() {
@@ -14,8 +33,8 @@ async function initMap() {
   let [toMap, toMarker] = setUpAutocomplete($('#whereToMap')[0], $('#whereTo')[0]);
 
   if ($('#whereFrom').val() !== '') { // if on the deliveries page, set the maps to the correct address
-    getPlaceAndUpdateMap(fromMap, fromMarker);
-    getPlaceAndUpdateMap(toMap, toMarker);
+    getPlaceAndUpdateMap(fromMap, fromMarker, <string>$('#whereFrom').val());
+    getPlaceAndUpdateMap(toMap, toMarker, <string>$('#whereTo').val());
   }
 }
 
@@ -40,18 +59,18 @@ function setUpAutocomplete(mapElement: HTMLElement, addressElement: HTMLElement)
     if (!place.geometry) {
       // User entered the name of a Place that was not suggested and
       // pressed the Enter key, or the Place Details request failed.
-      window.alert('No details available for input: \'' + place.name + '\'');
+      window.alert('Couldn\'t find any places that match: \'' + place.name + '\'');
       return;
     }
     renderAddress(googleMap, marker, place);
   });
 
-  return [googleMap, marker, autocomplete];
+  return [googleMap, marker];
 }
 
-function getPlaceAndUpdateMap(map: google.maps.Map, marker: google.maps.Marker) {
+function getPlaceAndUpdateMap(map: google.maps.Map, marker: google.maps.Marker, address: string) {
   let service = new google.maps.places.PlacesService(map);
-  service.findPlaceFromQuery({ query: <string>$('#whereFrom').val(), fields: ["formatted_address", "geometry"] }, (
+  service.findPlaceFromQuery({ query: address, fields: ["formatted_address", "geometry"] }, (
     results: google.maps.places.PlaceResult[] | null,
     status: google.maps.places.PlacesServiceStatus
   ) => {
