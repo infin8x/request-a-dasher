@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@types/google.maps": "^3.47.3",
+    "@types/jquery": "^3.5.13",
+    "@types/jquery-mask-plugin": "^1.14.4"
+  }
+}
