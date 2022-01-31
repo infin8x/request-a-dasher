@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "outDir": "./static/js",
+        "allowJs": false,
+        "target": "ES6",
+    },
+    "include": ["./ts_src/**/*.ts"]
+}
