@@ -14,6 +14,7 @@ jQuery(() => {
     $('.date').each((i, ele) => {
         $(ele).text(new Date($(ele).text()).toLocaleString());
     });
+    $('#externalDeliveryId');
     $('.currentTimezone').text(Intl.DateTimeFormat().resolvedOptions().timeZone);
     $('#moreInfoButton').on('click', () => {
         if ($('#moreInfoButton').text().includes('more')) {
@@ -23,22 +24,26 @@ jQuery(() => {
             $('#moreInfoButton').text($('#moreInfoButton').text().replace('less', 'more'));
         }
     });
+    $('#clearButton').on('click', () => {
+        $('#whereFrom').val('');
+    });
     // Save from address to localStorage, and get it out again if it's there
     $('#form').on('submit', () => {
         $('#form').find('input[type=submit]').prop('disabled', true);
         localStorage.setItem('whereFrom', $('#whereFrom').val());
     });
-    if (localStorage.getItem('whereFrom') !== null) {
-        $('#whereFrom').val(localStorage.getItem('whereFrom'));
-        // TODO figure out how to call getPlaceAndUpdateMap
-    }
 });
 function initMap() {
     return __awaiter(this, void 0, void 0, function* () {
         let [fromMap, fromMarker] = setUpAutocomplete($('#whereFromMap')[0], $('#whereFrom')[0]);
         let [toMap, toMarker] = setUpAutocomplete($('#whereToMap')[0], $('#whereTo')[0]);
-        if ($('#whereFrom').val() !== '') { // if on the deliveries page, set the maps to the correct address
+        if (localStorage.getItem('whereFrom') !== '') {
+            $('#whereFrom').val(localStorage.getItem('whereFrom'));
+        }
+        if ($('#whereFrom').val() !== '') {
             getPlaceAndUpdateMap(fromMap, fromMarker, $('#whereFrom').val());
+        }
+        if ($('#whereTo').val() !== '') { // if on the deliveries page, also set the drop-off map to the correct address
             getPlaceAndUpdateMap(toMap, toMarker, $('#whereTo').val());
         }
     });
