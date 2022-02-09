@@ -55,7 +55,6 @@ function setUpAutocomplete(mapElement: HTMLElement, addressElement: HTMLElement)
   const marker = new google.maps.Marker({ map: googleMap, draggable: false });
   const autocomplete = new google.maps.places.Autocomplete(<HTMLInputElement>addressElement, {
     fields: ["address_components", "geometry", "name"],
-    types: ["address"],
     componentRestrictions: { country: "us" },
   });
   autocomplete.addListener('place_changed', function () {
