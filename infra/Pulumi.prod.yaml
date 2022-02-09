@@ -1,5 +1,9 @@
 config:
   azure-native:location: WestUS
+  request-a-dasher:developerId: 14e84291-d900-4c20-8528-ed6ca8de660f
   request-a-dasher:googleProviderAuthenticationClientId: 879682729138-b6pvks3oh0qid7it8v3llkf29f9ek86r.apps.googleusercontent.com
   request-a-dasher:googleProviderAuthenticationSecret:
     secure: AAABAHdBFs5Y0jkLoZ7PFbSY4MEZ6G9tnjMAKZ0LePSlbcwTRJPo/WC2iaAcuuN68BqTB0s0yVBM4eS0UqNiydoxww==
+  request-a-dasher:keyId: 38420d9b-d10b-40d0-bc36-3198c015c5cb
+  request-a-dasher:signingSecret:
+    secure: AAABAOuu9rYv4w2ofAAJXzcvRsgT7HdPjQg7LLl6aoIqqI7XN+Fg8FKjTQsznkmjld1ir21LJ0E1bF0HcGbSfmS1AxJ2ngEhUMcQ

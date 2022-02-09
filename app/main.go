@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -20,6 +21,10 @@ import (
 )
 
 var DoorDashV2APIPrefix string = "https://openapi.doordash.com/drive/v2/"
+
+type IndexResponse struct {
+	DebugInfo string `json:"debugInfo"`
+}
 
 type DeliveryRequest struct {
 	ExternalDeliveryId  string `json:"external_delivery_id"`
@@ -107,7 +112,11 @@ func indexGETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	body := IndexResponse{
+		DebugInfo: fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
+	}
+
+	if err := tmpl.Execute(w, body); err != nil {
 		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
 	}

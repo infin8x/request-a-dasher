@@ -74,6 +74,22 @@ const app = new web.WebApp(productName + "-" + stackName, {
             {
                 name: "GOOGLE_PROVIDER_AUTHENTICATION_SECRET",
                 value: cfg.requireSecret("googleProviderAuthenticationSecret"),
+            },
+            {
+                name: "DOORDASH_DEVELOPER_ID",
+                value: cfg.require("developerId"),
+            },
+            {
+                name: "DOORDASH_KEY_ID",
+                value: cfg.require("keyId"),
+            },
+            {
+                name: "DOORDASH_SIGNING_SECRET",
+                value: cfg.require("signingSecret"),
+            },
+            {
+                name: "STACK_NAME",
+                value: stackName,
             }
         ],
         alwaysOn: true,
