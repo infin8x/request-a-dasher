@@ -1,2 +1,5 @@
 config:
   azure-native:location: WestUS
+  request-a-dasher:googleProviderAuthenticationClientId: 879682729138-b6pvks3oh0qid7it8v3llkf29f9ek86r.apps.googleusercontent.com
+  request-a-dasher:googleProviderAuthenticationSecret:
+    secure: AAABAHdBFs5Y0jkLoZ7PFbSY4MEZ6G9tnjMAKZ0LePSlbcwTRJPo/WC2iaAcuuN68BqTB0s0yVBM4eS0UqNiydoxww==

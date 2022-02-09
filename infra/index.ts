@@ -4,13 +4,13 @@ import * as resources from "@pulumi/azure-native/resources";
 import * as web from "@pulumi/azure-native/web";
 
 import * as docker from "@pulumi/docker";
-import { UnauthenticatedClientAction } from "@pulumi/azure-native/web/v20150801";
 import { UnauthenticatedClientActionV2 } from "@pulumi/azure-native/web/v20200601";
 
 const productName = "request-a-dasher";
 const stackName = pulumi.getStack();
 
 const resourceGroup = new resources.ResourceGroup(productName);
+const cfg = new pulumi.Config();
 
 // Build and publish container
 const registry = new containerregistry.Registry("registry", {
@@ -73,7 +73,7 @@ const app = new web.WebApp(productName + "-" + stackName, {
             },
             {
                 name: "GOOGLE_PROVIDER_AUTHENTICATION_SECRET",
-                value: "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",
+                value: cfg.requireSecret("googleProviderAuthenticationSecret"),
             }
         ],
         alwaysOn: true,
@@ -94,7 +94,7 @@ const authSettings = new web.WebAppAuthSettingsV2(productName + "-" + stackName,
         google: {
             enabled: true,
             registration: {
-                clientId: "879682729138-b6pvks3oh0qid7it8v3llkf29f9ek86r.apps.googleusercontent.com",
+                clientId: cfg.requireSecret("googleProviderAuthenticationClientId"),
                 clientSecretSettingName: "GOOGLE_PROVIDER_AUTHENTICATION_SECRET",
             }
         }
