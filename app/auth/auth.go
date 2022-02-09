@@ -22,7 +22,6 @@ type DoorDashClaims struct {
 }
 
 func GetJWT() (string, error) {
-	// TODO add secrets management and roll this secret before making the repository public
 	accessKey := &DoorDashAccessKey{
 		developerId:   os.Getenv("DOORDASH_DEVELOPER_ID"),
 		keyId:         os.Getenv("DOORDASH_KEY_ID"),
