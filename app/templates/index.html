@@ -25,11 +25,21 @@
         </div>
       </div>
     </header>
+    {{if eq .StackName "prod"}}
     <div class="alert alert-warning" role="alert">
       <div class="container">
         This is a <strong>production</strong> instance. A Dasher will show up when you request them; make sure you're ready with your item!
       </div>
     </div>
+    {{end}}
+    {{if eq .StackName "sandbox"}}
+    <div class="alert alert-info" role="alert">
+      <div class="container">
+        This is a <strong>sandbox</strong> instance. Feel free to play around and create as many deliveries
+        as you like; no Dashers will be dispatched.
+      </div>
+    </div>
+    {{end}}
     <div class="container mt-3">
       <form id="form" method="POST" action="/">
         <div class="row g-5">
