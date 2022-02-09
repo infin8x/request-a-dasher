@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -20,6 +21,11 @@ import (
 )
 
 var DoorDashV2APIPrefix string = "https://openapi.doordash.com/drive/v2/"
+
+type IndexResponse struct {
+	DebugInfo string `json:"debugInfo"`
+	StackName string `json:"stackName"`
+}
 
 type DeliveryRequest struct {
 	ExternalDeliveryId  string `json:"external_delivery_id"`
@@ -67,6 +73,9 @@ type DeliveryResponse struct {
 	DeliveryStatusProgressBarClasses string
 	PickupTime                       time.Time
 	DropoffTime                      time.Time
+
+	DebugInfo string `json:"debugInfo"`
+	StackName string `json:"stackName"`
 }
 
 func main() {
@@ -107,7 +116,12 @@ func indexGETHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tmpl.Execute(w, nil); err != nil {
+	body := IndexResponse{
+		DebugInfo: fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
+		StackName: os.Getenv("STACK_NAME"),
+	}
+
+	if err := tmpl.Execute(w, body); err != nil {
 		fmt.Printf("Unable to execute template: %v\n", err.Error())
 		http.Error(w, "oh snap", http.StatusInternalServerError)
 	}
@@ -195,7 +209,10 @@ func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	if vars["id"] == "" {
 		fmt.Print("Requesting status page with no delivery ID\n")
 
-		if err := tmpl.Execute(w, DeliveryResponse{}); err != nil {
+		if err := tmpl.Execute(w, DeliveryResponse{
+			StackName: os.Getenv("STACK_NAME"),
+			DebugInfo: fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
+		}); err != nil {
 			fmt.Printf("Unable to execute template: %v\n", err.Error())
 			http.Error(w, "oh snap", http.StatusInternalServerError)
 		}
@@ -381,6 +398,9 @@ func deprefixDeliveryId(deliveryId string) string {
 func addFriendlyResponseInfo(delivery DeliveryResponse) DeliveryResponse {
 	delivery.PickupPhoneNumber = strings.Trim(delivery.PickupPhoneNumber, "+1")
 	delivery.DropoffPhoneNumber = strings.Trim(delivery.DropoffPhoneNumber, "+1")
+
+	delivery.StackName = os.Getenv("STACK_NAME")
+	delivery.DebugInfo = fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID"))
 
 	switch delivery.DeliveryStatus {
 	case "created":

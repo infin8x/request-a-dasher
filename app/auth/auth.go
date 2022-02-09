@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -21,11 +22,10 @@ type DoorDashClaims struct {
 }
 
 func GetJWT() (string, error) {
-	// TODO add secrets management and roll this secret before making the repository public
 	accessKey := &DoorDashAccessKey{
-		developerId:   "14e84291-d900-4c20-8528-ed6ca8de660f",
-		keyId:         "6cdda623-edcc-4c27-8a5e-58750f24abde",
-		signingSecret: "AeSSabdqLknKnZND_lnGBPbS9VzzamFTOw9mvLFheBQ",
+		developerId:   os.Getenv("DOORDASH_DEVELOPER_ID"),
+		keyId:         os.Getenv("DOORDASH_KEY_ID"),
+		signingSecret: os.Getenv("DOORDASH_SIGNING_SECRET"),
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, &DoorDashClaims{

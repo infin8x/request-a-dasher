@@ -26,12 +26,21 @@
         </div>
       </div>
     </header>
+    {{if eq .StackName "prod"}}
+    <div class="alert alert-warning" role="alert">
+      <div class="container">
+        This is a <strong>production</strong> instance. A Dasher will show up when you request them; make sure you're ready with your item!
+      </div>
+    </div>
+    {{end}}
+    {{if eq .StackName "sandbox"}}
     <div class="alert alert-info" role="alert">
       <div class="container">
         This is a <strong>sandbox</strong> instance. Feel free to play around and create as many deliveries
         as you like; no Dashers will be dispatched.
       </div>
     </div>
+    {{end}}
     <div class="container mt-3">
       <div class="row">
         <div class="col">
@@ -195,6 +204,7 @@
         </div>
       </div>
     </div>
+    <div style="display: none;">{{.DebugInfo}}</div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
