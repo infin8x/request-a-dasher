@@ -157,10 +157,10 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	body := DeliveryRequest{
 		ExternalDeliveryId:  prefixDeliveryId(fmt.Sprint(time.Now().Unix())),
 		PickupAddress:       r.FormValue("whereFrom"),
-		PickupBusinessName:  "DoorDash",
+		PickupBusinessName:  r.FormValue("pickupBusinessName"),
 		PickupPhoneNumber:   "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("pickupPhone")),
 		PickupInstructions:  r.FormValue("pickupInstructions"),
-		PickupReferenceTag:  "Request a Dasher",
+		PickupReferenceTag:  "DoorDash: Request a Dasher",
 		DropoffAddress:      r.FormValue("whereTo"),
 		DropoffBusinessName: r.FormValue("dropoffBusinessName"),
 		DropoffPhoneNumber:  "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("dropoffPhone")),

@@ -70,6 +70,15 @@
             <div class="collapse extras" id="whereFromExtras">
               <div class="row mb-3">
                 <div class="col">
+                  <label for="pickupBusinessName" class="form-label">Sender's name <span
+                      class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="pickupBusinessName" name="pickupBusinessName">
+                  <div id="pickupBusinessNameHelp" class="form-text">Who should the Dasher be looking for?
+                  </div>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col">
                   <label for="pickupInstructions" class="form-label">Pickup instructions <span
                       class="text-muted">(Optional)</span></label>
                   <input type="text" class="form-control" id="pickupInstructions" name="pickupInstructions">
@@ -94,7 +103,7 @@
                   <input type="tel" pattern="\([0-9]{3}\) [0-9]{3}-[0-9]{4}" class="form-control phone"
                     id="dropoffPhone" name="dropoffPhone" required>
                 </div>
-                <div id="whereFromHelp" class="form-text">Who should the Dasher call if there's a delivery problem?
+                <div id="dropoffPhoneHelp" class="form-text">Who should the Dasher call if there's a delivery problem?
                 </div>
               </div>
             </div>
@@ -104,7 +113,7 @@
                   <label for="dropoffBusinessName" class="form-label">Receiver's name <span
                       class="text-muted">(Optional)</span></label>
                   <input type="text" class="form-control" id="dropoffBusinessName" name="dropoffBusinessName">
-                  <div id="whereFromHelp" class="form-text">Who should the Dasher be looking for?
+                  <div id="dropoffbusinessNameHelp" class="form-text">Who should the Dasher be looking for?
                   </div>
                 </div>
               </div>
