@@ -51,10 +51,10 @@ type DeliveryRequest struct {
 	Tip                int    `json:"tip"`
 
 	// Items that are unique to the request
-	PickupTime    time.Time  `json:"pickup_time"`
-	PickupWindow  TimeWindow `json:"pickup_window"`
-	DropoffTime   time.Time  `json:"dropoff_time"`
-	DropoffWindow TimeWindow `json:"dropoff_window"`
+	PickupTime time.Time `json:"pickup_time"`
+	// PickupWindow  TimeWindow `json:"pickup_window"`
+	DropoffTime time.Time `json:"dropoff_time"`
+	// DropoffWindow TimeWindow `json:"dropoff_window"`
 }
 
 type DeliveryResponse struct {
@@ -177,6 +177,27 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contactless, err := strconv.ParseBool(r.FormValue("contactlessDropoff"))
+	if err != nil {
+		fmt.Printf("Unable to parse contactless dropoff flag: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
+
+	pickup, err := time.Parse(time.RFC3339, r.FormValue("pickupTime"))
+	if err != nil {
+		fmt.Printf("Unable to parse pickup time: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
+
+	dropoff, err := time.Parse(time.RFC3339, r.FormValue("dropoffTime"))
+	if err != nil {
+		fmt.Printf("Unable to parse dropoff time: %v\n", err.Error())
+		http.Error(w, "oh snap", http.StatusInternalServerError)
+		return
+	}
+
 	body := DeliveryRequest{
 		ExternalDeliveryId:  prefixDeliveryId(fmt.Sprint(time.Now().Unix())),
 		PickupAddress:       r.FormValue("whereFrom"),
@@ -191,6 +212,9 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		OrderValue:          int(orderValue * 100), // DoorDash API expects all money in cents
 		Currency:            "usd",
 		Tip:                 int(tip * 100), // DoorDash API expects all money in cents
+		ContactlessDropoff:  contactless,
+		PickupTime:          pickup,
+		DropoffTime:         dropoff,
 	}
 
 	// TODO move cents-handling logic to the SDK layer eventually
