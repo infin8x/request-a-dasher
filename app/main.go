@@ -51,9 +51,9 @@ type DeliveryRequest struct {
 	Tip                int    `json:"tip"`
 
 	// Items that are unique to the request
-	PickupTime time.Time `json:"pickup_time"`
+	// PickupTime time.Time `json:"pickup_time"`
 	// PickupWindow  TimeWindow `json:"pickup_window"`
-	DropoffTime time.Time `json:"dropoff_time"`
+	// DropoffTime time.Time `json:"dropoff_time"`
 	// DropoffWindow TimeWindow `json:"dropoff_window"`
 }
 
@@ -223,7 +223,7 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := createDelivery(bodyJson)
 	if err != nil {
 		http.Error(w,
-			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			fmt.Sprint(err.Error()),
 			http.StatusInternalServerError)
 		return
 	}
@@ -299,7 +299,7 @@ func dddeliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := getDelivery(id)
 	if err != nil {
 		http.Error(w,
-			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			fmt.Sprintf("Couldn't get your delivery because %v! We've logged an error and will take a look.", err.Error()),
 			http.StatusInternalServerError)
 		return
 	}
@@ -307,7 +307,7 @@ func dddeliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 	toreturn, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		http.Error(w,
-			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			fmt.Sprintf("Couldn't get your delivery because %v! We've logged an error and will take a look.", err.Error()),
 			http.StatusInternalServerError)
 		return
 	}
@@ -332,7 +332,7 @@ func dddeliveriesPOSTHandler(w http.ResponseWriter, r *http.Request) {
 	response, err := createDelivery(bodyJson)
 	if err != nil {
 		http.Error(w,
-			fmt.Sprintf("Couldn't create your delivery because %v! We've logged an error and will take a look.", err.Error()),
+			fmt.Sprint(err.Error()),
 			http.StatusInternalServerError)
 		return
 	}
@@ -388,32 +388,40 @@ func createDelivery(apiRequestBody []byte) (string, error) {
 	token, err := auth.GetJWT()
 	if err != nil {
 		fmt.Printf("Unable to get a JWT: %v\n", err.Error())
-		return "", errors.New("we couldn't authenticate with DoorDash")
+		return "", errors.New("couldn't create your delivery because we couldn't authenticate with DoorDash. We've logged an error and will take a look")
 	}
 	fmt.Printf("Bearer token\n============\n%v\n", token)
-
 	// Create a client and prepare the request
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", DoorDashV2APIPrefix+"deliveries", bytes.NewBuffer(apiRequestBody))
+	fmt.Print(string(apiRequestBody))
 	if err != nil {
 		fmt.Printf("Unable to create an http client: %v\n", err.Error())
-		return "", errors.New("we couldn't connect to DoorDash")
+		return "", errors.New("couldn't create your delivery because we couldn't connect to DoorDash. We've logged an error and will take a look")
 	}
 
 	// Add the authorization header and do the request
 	req.Header.Add("Authorization", "Bearer "+token)
 	res, err := client.Do(req)
 	if err != nil {
-		// TODO better/more specific error code handling
 		fmt.Printf("Unable to request creation of the delivery: %v\n", err.Error())
-		return "", errors.New("we couldn't connect to DoorDash")
+		return "", errors.New("couldn't create your delivery because we couldn't connect to DoorDash. We've logged an error and will take a look")
 	}
 
 	// Parse the response
 	responseData, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		fmt.Printf("Unable to parse the response details of the newly-created delivery: %v\n", err.Error())
-		return "", errors.New("we couldn't connect to DoorDash")
+		return "", errors.New("couldn't create your delivery because we couldn't understand the response we got back from DoorDash. We've logged an error and will take a look")
+	}
+
+	if res.StatusCode != http.StatusOK {
+		fmt.Printf("Received a %v from DoorDash: %v\n", res.StatusCode, string(responseData))
+		if res.StatusCode == http.StatusBadRequest || res.StatusCode == http.StatusConflict || res.StatusCode == http.StatusUnprocessableEntity {
+			return "", fmt.Errorf("couldn't create your delivery because of the following issue: \nError code: %v\nError details: %v", res.StatusCode, string(responseData))
+		} else {
+			return "", fmt.Errorf("couldn't create your delivery because of the following issue; we've logged an error and will take a look.\nError code: %v\nError details: %v", res.StatusCode, string(responseData))
+		}
 	}
 
 	return string(responseData), nil
