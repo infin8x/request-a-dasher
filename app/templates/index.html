@@ -1,12 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/png" href="//cdn.doordash.com/static/img/favicon@2x.ico?dd-nonce">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="//cdn.doordash.com/static/img/favicon@2x.ico?dd-nonce" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous" />
   <title>Request a Dasher</title>
 </head>
 
@@ -16,11 +16,15 @@
       <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
           <a href="/" class="d-flex align-items-center justify-content-center justify-content-lg-start">
-            <img class="me-2" style="width: 2em;" src="/DoorDash_icon_RGB.svg" />
+            <img class="me-2" style="width: 2em" src="/DoorDash_icon_RGB.svg" />
           </a>
           <ul class="nav col justify-content-center justify-content-lg-start">
-            <li><a href="/" class="nav-link text-white fw-bold" aria-current="page">Request a Dasher</a></li>
-            <li><a href="/deliveries" class="nav-link text-white">Deliveries</a></li>
+            <li>
+              <a href="/" class="nav-link text-white fw-bold" aria-current="page">Request a Dasher</a>
+            </li>
+            <li>
+              <a href="/deliveries" class="nav-link text-white">Deliveries</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -28,15 +32,16 @@
     {{if eq .StackName "prod"}}
     <div class="alert alert-warning" role="alert">
       <div class="container">
-        This is a <strong>production</strong> instance. A Dasher will show up when you request them; make sure you're ready with your item!
+        This is a <strong>production</strong> instance. A Dasher will show up
+        when you request them; make sure you're ready with your item!
       </div>
     </div>
-    {{end}}
-    {{if eq .StackName "sandbox"}}
+    {{end}} {{if eq .StackName "sandbox"}}
     <div class="alert alert-info" role="alert">
       <div class="container">
-        This is a <strong>sandbox</strong> instance. Feel free to play around and create as many deliveries
-        as you like; no Dashers will be dispatched.
+        This is a <strong>sandbox</strong> instance. Feel free to play around
+        and create as many deliveries as you like; no Dashers will be
+        dispatched.
       </div>
     </div>
     {{end}}
@@ -49,10 +54,13 @@
               <div class="col">
                 <label for="whereFrom" class="form-label">Address</label>
                 <div class="input-group">
-                  <input type="text" class="form-control mb-3" id="whereFrom" name="whereFrom" required placeholder="">
-                  <button class="btn btn-link" id="clearButton" type="button">Clear</button>
+                  <input type="text" class="form-control mb-3" id="whereFrom" name="whereFrom" required
+                    placeholder="" />
+                  <button class="btn btn-link" id="clearButton" type="button">
+                    Clear
+                  </button>
                 </div>
-                <div class="map border" id="whereFromMap" style="width: 100%; height: 200px;"></div>
+                <div class="map border" id="whereFromMap" style="width: 100%; height: 200px"></div>
               </div>
             </div>
             <div class="row mb-3">
@@ -61,27 +69,39 @@
                 <div class="input-group">
                   <span class="input-group-text">+1</span>
                   <input type="tel" pattern="\([0-9]{3}\) [0-9]{3}-[0-9]{4}" class="form-control phone" id="pickupPhone"
-                    name="pickupPhone" required>
+                    name="pickupPhone" required />
                 </div>
-                <div id="whereFromHelp" class="form-text">Who should the Dasher call if there's a pickup problem?
+                <div id="whereFromHelp" class="form-text">
+                  Who should the Dasher call if there's a pickup problem?
                 </div>
               </div>
             </div>
             <div class="collapse extras" id="whereFromExtras">
               <div class="row mb-3">
                 <div class="col">
-                  <label for="pickupBusinessName" class="form-label">Sender's name <span
-                      class="text-muted">(Optional)</span></label>
-                  <input type="text" class="form-control" id="pickupBusinessName" name="pickupBusinessName">
-                  <div id="pickupBusinessNameHelp" class="form-text">Who should the Dasher be looking for?
+                  <label for="pickupBusinessName" class="form-label">Sender's name
+                    <span class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="pickupBusinessName" name="pickupBusinessName" />
+                  <div id="pickupBusinessNameHelp" class="form-text">
+                    Who should the Dasher be looking for?
                   </div>
                 </div>
               </div>
               <div class="row mb-3">
                 <div class="col">
-                  <label for="pickupInstructions" class="form-label">Pickup instructions <span
-                      class="text-muted">(Optional)</span></label>
-                  <input type="text" class="form-control" id="pickupInstructions" name="pickupInstructions">
+                  <label for="pickupInstructions" class="form-label">Pickup instructions
+                    <span class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="pickupInstructions" name="pickupInstructions" />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col">
+                  <label for="pickupReferenceTag" class="form-label">Pickup reference tag
+                    <span class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="pickupReferenceTag" name="pickupReferenceTag" />
+                  <div id="pickupReferenceTagHelp" class="form-text">
+                    Provide a unique reference to help the Dasher pick between similar-looking deliveries.
+                  </div>
                 </div>
               </div>
             </div>
@@ -91,65 +111,78 @@
             <div class="row mb-3">
               <div class="col">
                 <label for="whereTo" class="form-label">Address</label>
-                <input type="text" class="form-control mb-3" id="whereTo" name="whereTo" required placeholder="">
-                <div class="map border" id="whereToMap" style="width: 100%; height: 200px;"></div>
+                <input type="text" class="form-control mb-3" id="whereTo" name="whereTo" required placeholder="" />
+                <div class="map border" id="whereToMap" style="width: 100%; height: 200px"></div>
               </div>
             </div>
             <div class="row mb-3">
-              <div class="col">
+              <div class="col-sm">
                 <label for="dropoffPhone" class="form-label">Phone number</label>
                 <div class="input-group">
                   <span class="input-group-text">+1</span>
                   <input type="tel" pattern="\([0-9]{3}\) [0-9]{3}-[0-9]{4}" class="form-control phone"
-                    id="dropoffPhone" name="dropoffPhone" required>
+                    id="dropoffPhone" name="dropoffPhone" required />
                 </div>
-                <div id="dropoffPhoneHelp" class="form-text">Who should the Dasher call if there's a delivery problem?
+                <div id="dropoffPhoneHelp" class="form-text">
+                  Who should the Dasher call if there's a delivery problem?
                 </div>
               </div>
             </div>
             <div class="collapse extras" id="whereToExtras">
               <div class="row mb-3">
                 <div class="col">
-                  <label for="dropoffBusinessName" class="form-label">Receiver's name <span
-                      class="text-muted">(Optional)</span></label>
-                  <input type="text" class="form-control" id="dropoffBusinessName" name="dropoffBusinessName">
-                  <div id="dropoffbusinessNameHelp" class="form-text">Who should the Dasher be looking for?
+                  <label for="dropoffBusinessName" class="form-label">Receiver's name
+                    <span class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="dropoffBusinessName" name="dropoffBusinessName" />
+                  <div id="dropoffbusinessNameHelp" class="form-text">
+                    Who should the Dasher be looking for?
                   </div>
                 </div>
               </div>
               <div class="row mb-3">
                 <div class="col">
-                  <label for="dropoffInstructions" class="form-label">Drop-off instructions <span
-                      class="text-muted">(Optional)</span></label>
-                  <input type="text" class="form-control" id="dropoffInstructions" name="dropoffInstructions">
+                  <label for="dropoffInstructions" class="form-label">Drop-off instructions
+                    <span class="text-muted">(Optional)</span></label>
+                  <input type="text" class="form-control" id="dropoffInstructions" name="dropoffInstructions" />
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <hr class="my-4">
+        <hr class="my-4" />
         <div class="row g-5">
-
-          <div class="col">
+          <div class="col-sm">
             <label for="orderValue" class="form-label">Order value</label>
             <div class="input-group">
               <span class="input-group-text">$</span>
               <input type="text" pattern="[0-9]{0,3}.[0-9]{2}" class="form-control money" id="orderValue"
-                name="orderValue" required>
+                name="orderValue" required />
             </div>
           </div>
-          <div class="col">
+          <div class="col-sm">
             <label for="tip" class="form-label">Tip</label>
             <div class="input-group">
               <span class="input-group-text">$</span>
-              <input type="text" pattern="[0-9]{0,3}.[0-9]{2}" class="form-control money" id="tip" name="tip" required>
+              <input type="text" pattern="[0-9]{0,3}.[0-9]{2}" class="form-control money" id="tip" name="tip"
+                required />
+            </div>
+          </div>
+          <div class="col-sm">
+            <label for="tip" class="form-label">Options</label>
+            <div class="form-check form-switch mt-1">
+              <input class="form-check-input" type="checkbox" id="contactlessDropoff" name="contactlessDropoff" />
+              <label class="form-check-label" for="flexCheckDefault">
+                Contactless
+              </label>
             </div>
           </div>
         </div>
-        <hr class="my-4">
+        <hr class="my-4" />
         <div class="row mb-3">
           <div class="col-sm-6 col-md-8 mb-3">
-            <button class="w-100 btn btn-primary btn-lg" type="submit">Request delivery</button>
+            <button class="w-100 btn btn-primary btn-lg" type="submit">
+              Request delivery
+            </button>
           </div>
           <div class="col-sm-6 col-md-4 mb-3">
             <button class="w-100 btn btn-outline-secondary btn-lg" id="moreInfoButton" type="button"
@@ -160,7 +193,7 @@
         </div>
       </form>
     </div>
-    <div style="display: none;">{{.DebugInfo}}</div>
+    <div style="display: none">{{.DebugInfo}}</div>
   </main>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
