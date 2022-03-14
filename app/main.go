@@ -27,46 +27,68 @@ type IndexResponse struct {
 	StackName string `json:"stackName"`
 }
 
+type TimeWindow struct {
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+}
+
 type DeliveryRequest struct {
-	ExternalDeliveryId  string `json:"external_delivery_id"`
+	ExternalDeliveryId string `json:"external_delivery_id"`
+
 	PickupAddress       string `json:"pickup_address"`
 	PickupBusinessName  string `json:"pickup_business_name"`
-	PickupPhoneNumber   string `json:"pickup_phone_number"`
 	PickupInstructions  string `json:"pickup_instructions"`
+	PickupPhoneNumber   string `json:"pickup_phone_number"`
 	PickupReferenceTag  string `json:"pickup_reference_tag"`
 	DropoffAddress      string `json:"dropoff_address"`
 	DropoffBusinessName string `json:"dropoff_business_name"`
-	DropoffPhoneNumber  string `json:"dropoff_phone_number"`
 	DropoffInstructions string `json:"dropoff_instructions"`
-	OrderValue          int    `json:"order_value"`
-	Currency            string `json:"currency"`
-	Tip                 int    `json:"tip"`
+	DropoffPhoneNumber  string `json:"dropoff_phone_number"`
+
+	ContactlessDropoff bool   `json:"contactless_dropoff"`
+	OrderValue         int    `json:"order_value"`
+	Currency           string `json:"currency"`
+	Tip                int    `json:"tip"`
+
+	// Items that are unique to the request
+	PickupTime time.Time `json:"pickup_time"`
+	// PickupWindow  TimeWindow `json:"pickup_window"`
+	DropoffTime time.Time `json:"dropoff_time"`
+	// DropoffWindow TimeWindow `json:"dropoff_window"`
 }
 
 type DeliveryResponse struct {
-	ExternalDeliveryId  string `json:"external_delivery_id"`
+	// Items that correspond to the request
+	ExternalDeliveryId string `json:"external_delivery_id"`
+
 	PickupAddress       string `json:"pickup_address"`
 	PickupBusinessName  string `json:"pickup_business_name"`
-	PickupPhoneNumber   string `json:"pickup_phone_number"`
 	PickupInstructions  string `json:"pickup_instructions"`
+	PickupPhoneNumber   string `json:"pickup_phone_number"`
 	PickupReferenceTag  string `json:"pickup_reference_tag"`
 	DropoffAddress      string `json:"dropoff_address"`
 	DropoffBusinessName string `json:"dropoff_business_name"`
-	DropoffPhoneNumber  string `json:"dropoff_phone_number"`
 	DropoffInstructions string `json:"dropoff_instructions"`
-	OrderValue          int    `json:"order_value"`
-	Currency            string `json:"currency"`
-	Tip                 int    `json:"tip"`
+	DropoffPhoneNumber  string `json:"dropoff_phone_number"`
 
-	DeliveryStatus       string    `json:"delivery_status"`
-	TrackingUrl          string    `json:"tracking_url"`
-	Fee                  int       `json:"fee"`
+	ContactlessDropoff bool   `json:"contactless_dropoff"`
+	OrderValue         int    `json:"order_value"`
+	Currency           string `json:"currency"`
+	Tip                int    `json:"tip"`
+
+	// Items that are unique to the response
 	PickupTimeEstimated  time.Time `json:"pickup_time_estimated"`
 	PickupTimeActual     time.Time `json:"pickup_time_actual"`
 	DropoffTimeEstimated time.Time `json:"dropoff_time_estimated"`
 	DropoffTimeActual    time.Time `json:"dropoff_time_actual"`
-	ContactlessDropoff   bool      `json:"contactless_dropoff"`
 
+	CancellationReason string `json:"cancellation_reason"`
+	DeliveryStatus     string `json:"delivery_status"`
+	Fee                int    `json:"fee"`
+	SupportReference   string `json:"support_reference"`
+	TrackingUrl        string `json:"tracking_url"`
+
+	// Reformatted items
 	DeprefixedDeliveryId             string
 	DeliveryStatusFriendly           string
 	DeliveryStatusPercentage         int
@@ -74,6 +96,7 @@ type DeliveryResponse struct {
 	PickupTime                       time.Time
 	DropoffTime                      time.Time
 
+	// Debug info
 	DebugInfo string `json:"debugInfo"`
 	StackName string `json:"stackName"`
 }
@@ -154,13 +177,27 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// pickup, err := time.Parse(time.RFC3339, r.FormValue("pickupTime"))
+	// if err != nil {
+	// 	fmt.Printf("Unable to parse pickup time: %v\n", err.Error())
+	// 	http.Error(w, "oh snap", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// dropoff, err := time.Parse(time.RFC3339, r.FormValue("dropoffTime"))
+	// if err != nil {
+	// 	fmt.Printf("Unable to parse dropoff time: %v\n", err.Error())
+	// 	http.Error(w, "oh snap", http.StatusInternalServerError)
+	// 	return
+	// }
+
 	body := DeliveryRequest{
 		ExternalDeliveryId:  prefixDeliveryId(fmt.Sprint(time.Now().Unix())),
 		PickupAddress:       r.FormValue("whereFrom"),
 		PickupBusinessName:  r.FormValue("pickupBusinessName"),
 		PickupPhoneNumber:   "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("pickupPhone")),
 		PickupInstructions:  r.FormValue("pickupInstructions"),
-		PickupReferenceTag:  "DoorDash: Request a Dasher",
+		PickupReferenceTag:  r.FormValue("pickupReferenceTag"),
 		DropoffAddress:      r.FormValue("whereTo"),
 		DropoffBusinessName: r.FormValue("dropoffBusinessName"),
 		DropoffPhoneNumber:  "+1" + strings.Map(mapFilterPhoneNumber, r.FormValue("dropoffPhone")),
@@ -168,6 +205,9 @@ func indexPOSTHandler(w http.ResponseWriter, r *http.Request) {
 		OrderValue:          int(orderValue * 100), // DoorDash API expects all money in cents
 		Currency:            "usd",
 		Tip:                 int(tip * 100), // DoorDash API expects all money in cents
+		ContactlessDropoff:  r.FormValue("contactlessDropoff") == "on",
+		// PickupTime:          pickup,
+		// DropoffTime:         dropoff,
 	}
 
 	// TODO move cents-handling logic to the SDK layer eventually
