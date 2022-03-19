@@ -88,6 +88,10 @@ const app = new web.WebApp(productName + "-" + stackName, {
                 value: cfg.require("signingSecret"),
             },
             {
+                name: "GOOGLE_API_KEY",
+                value: cfg.require("googleApiKey"),
+            },
+            {
                 name: "STACK_NAME",
                 value: stackName,
             }

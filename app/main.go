@@ -23,8 +23,9 @@ import (
 var DoorDashV2APIPrefix string = "https://openapi.doordash.com/drive/v2/"
 
 type IndexResponse struct {
-	DebugInfo string `json:"debugInfo"`
-	StackName string `json:"stackName"`
+	DebugInfo    string `json:"debugInfo"`
+	StackName    string `json:"stackName"`
+	GoogleApiKey string
 }
 
 type TimeWindow struct {
@@ -96,9 +97,10 @@ type DeliveryResponse struct {
 	PickupTime                       time.Time
 	DropoffTime                      time.Time
 
-	// Debug info
-	DebugInfo string `json:"debugInfo"`
-	StackName string `json:"stackName"`
+	// Debug/technical
+	GoogleApiKey string
+	DebugInfo    string `json:"debugInfo"`
+	StackName    string `json:"stackName"`
 }
 
 func main() {
@@ -140,8 +142,9 @@ func indexGETHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := IndexResponse{
-		DebugInfo: fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
-		StackName: os.Getenv("STACK_NAME"),
+		GoogleApiKey: os.Getenv("GOOGLE_API_KEY"),
+		DebugInfo:    fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
+		StackName:    os.Getenv("STACK_NAME"),
 	}
 
 	if err := tmpl.Execute(w, body); err != nil {
@@ -250,8 +253,9 @@ func deliveriesGETHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Print("Requesting status page with no delivery ID\n")
 
 		if err := tmpl.Execute(w, DeliveryResponse{
-			StackName: os.Getenv("STACK_NAME"),
-			DebugInfo: fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
+			StackName:    os.Getenv("STACK_NAME"),
+			GoogleApiKey: os.Getenv("GOOGLE_API_KEY"),
+			DebugInfo:    fmt.Sprintf("This is a %v stack using keyId %v.", os.Getenv("STACK_NAME"), os.Getenv("DOORDASH_KEY_ID")),
 		}); err != nil {
 			fmt.Printf("Unable to execute template: %v\n", err.Error())
 			http.Error(w, "oh snap", http.StatusInternalServerError)
