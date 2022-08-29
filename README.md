@@ -10,7 +10,6 @@ Make sure you've got the following environment variables set wherever you'll run
 - `DOORDASH_KEY_ID`: Get this from [Developer Portal](https://developer.doordash.com/portal/integration/drive/credentials)
 - `DOORDASH_SIGNING_SECRET`: Get this from [Developer Portal](https://developer.doordash.com/portal/integration/drive/credentials)
 - `GOOGLE_API_KEY`: Get a Google Maps API key from the [Google Cloud console](https://developers.google.com/maps/documentation/javascript/get-api-key)
-```
 
 Then, run the Go webserver:
 
