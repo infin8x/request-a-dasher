@@ -4,7 +4,15 @@ A simple Go webapp for requesting a DoorDash Dasher via the [DoorDash Drive (v2)
 
 ## How to run
 
-You can run the Go webserver:
+Make sure you've got the following environment variables set wherever you'll run the app.
+
+- `DOORDASH_DEVELOPER_ID`: Get this from [Developer Portal](https://developer.doordash.com/portal/integration/drive/credentials)
+- `DOORDASH_KEY_ID`: Get this from [Developer Portal](https://developer.doordash.com/portal/integration/drive/credentials)
+- `DOORDASH_SIGNING_SECRET`: Get this from [Developer Portal](https://developer.doordash.com/portal/integration/drive/credentials)
+- `GOOGLE_API_KEY`: Get a Google Maps API key from the [Google Cloud console](https://developers.google.com/maps/documentation/javascript/get-api-key)
+```
+
+Then, run the Go webserver:
 
 ```sh
 cd app && go run main.go
